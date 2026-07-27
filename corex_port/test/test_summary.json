@@ -1,0 +1,30 @@
+{
+  "tests_run": 0,
+  "tests_passed": 0,
+  "tests_failed": 0,
+  "tests_skipped": 0,
+  "suite": "test/runtests.jl (完整 CUDA.jl 测试套件: core + gpuarrays; --all 时含 lib/*/test 各库)",
+  "run_command": "julia --project=test test/runtests.jl",
+  "note": "测试套件在 test/setup.jl:14 的 `@assert CUDA.functional(true)` 处立即崩溃(错误: NVIDIA driver too old), 在任何一个运行时测试用例被 include/执行之前就中止, 因此实际执行的运行时用例数为 0。这不是挑子集或漏报——是 terminal 初始化壁垒(见 blockers #1/#2)导致整套无法启动。预编译(build)本身在 repo-local 绕过后成功, 属 compile_status, 不计入此处。",
+  "metrics": [
+    {
+      "name": "ptx_module_load",
+      "metric_type": "other",
+      "value": 200.0,
+      "unit": "CUresult",
+      "reference": "CUDA_SUCCESS=0",
+      "config": "cuModuleLoadData(NV PTX text) on ivcore11 driver (CUDA 10.2)",
+      "device": "Iluvatar BI-V150",
+      "source": "corex_port/probe/ptx_probe (rc=200 IX_ERROR_INVALID_IMAGE)"
+    },
+    {
+      "name": "native_clang_kernel",
+      "metric_type": "other",
+      "value": 256.0,
+      "unit": "h[255] (expected 256.0)",
+      "config": "clang++ -x cuda --cuda-gpu-arch=ivcore11 native add1 kernel <<<>>>",
+      "device": "Iluvatar BI-V150",
+      "source": "corex_port/probe/native_kernel (sync=no error, 结果正确 -> GPU 本身正常)"
+    }
+  ]
+}

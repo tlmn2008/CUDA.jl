@@ -1,0 +1,1 @@
+clang++: warning: when compiling *.cu file for ivcore '-x cuda' need replace with '-x ivcore' in command line! '-x cuda' will not be supported [-Wunused-command-line-argument]

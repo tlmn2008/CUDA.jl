@@ -1,0 +1,16 @@
+# CUDA.jl is a Julia package; "build" = Julia package precompilation.
+# Env: source /home/init_container.sh ; Julia 1.11.5 (official binary); CoreX SDK /usr/local/corex.
+# Repo-local workaround applied (see changes/): CUDACore/src/precompile.jl guards the
+# @compile_workload with a ptxas-availability probe so precompilation no longer crashes with
+# `UndefVarError: ptxas not defined in CUDA_Compiler_jll` on the CoreX driver (CUDA 10.2).
+
+# 1) resolve + download deps/artifacts (main project)
+julia --project=. -e 'using Pkg; Pkg.instantiate()'         # -> build/instantiate_main.log (first attempt: ptxas UndefVarError)
+# 2) precompile after the resilient-workload workaround
+julia --project=. -e 'using Pkg; Pkg.precompile()'          # -> build/precompile_resilient.log (SUCCESS)
+# 3) test project
+julia --project=test -e 'using Pkg; Pkg.instantiate()'      # -> build/instantiate_test.log (SUCCESS)
+
+# Bare driver probes (evidence for the terminal PTX wall), see probe/:
+clang        probe/ptx_probe.c    -I$COREX_PATH/include -L$COREX_PATH/lib -lcuda           -o probe/ptx_probe
+clang++ -x cuda --cuda-gpu-arch=ivcore11 probe/native_kernel.cu -I$COREX_PATH/include -L$COREX_PATH/lib -lcudart -lcuda -o probe/native_kernel

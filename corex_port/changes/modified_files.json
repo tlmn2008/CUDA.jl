@@ -1,0 +1,14 @@
+{
+  "files": [
+    {
+      "path": "CUDACore/src/precompile.jl",
+      "action": "edit",
+      "reason": "在 CoreX 驱动(报告 CUDA 10.2, 低于 CUDA.jl 6.x 的 CUDA-12 下限)上, JLL 无法为该平台提供 ptxas(cuda=\"none\"), 导致 @compile_workload 里的 ptxas_compat() 抛 `UndefVarError: ptxas not defined in CUDA_Compiler_jll`, 连预编译都失败。加入 ptxas 可用性探针 _corex_ptxas_available() 作为 workload 守卫, 使包能正常预编译/加载, 从而让 __init__ 暴露真实的驱动壁垒(repo-local 绕过, 未触碰 /usr/local/corex)。"
+    },
+    {
+      "path": "LocalPreferences.toml",
+      "action": "edit",
+      "reason": "补充中文注释说明: 官方修复是 pin `[CUDA_Runtime_jll] version = \"12.6\"` 以在无 CUDA 环境下提供 ptxas, 但本环境无法获取该 cuda+12.x 制品(Julia PkgServer 镜像返回 404, GitHub release 回退被限速到 <1 B/s), 故该 pin 无法满足; 保持未设置并改由 precompile.jl 守卫绕过。"
+    }
+  ]
+}

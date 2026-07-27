@@ -1,0 +1,3 @@
+ CUDACore/src/precompile.jl | 13 ++++++++++++-
+ LocalPreferences.toml      | 10 +++++++++-
+ 2 files changed, 21 insertions(+), 2 deletions(-)

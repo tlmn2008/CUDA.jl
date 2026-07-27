@@ -1,0 +1,45 @@
+diff --git a/CUDACore/src/precompile.jl b/CUDACore/src/precompile.jl
+index 6297bf7..cfc9f1e 100644
+--- a/CUDACore/src/precompile.jl
++++ b/CUDACore/src/precompile.jl
+@@ -1,7 +1,18 @@
+ # `llvm_compat()` requires being able to initialize the NVPTX backend, so we run the
+ # precompile workload only when that's supported, to be able to load this package also on
+ # systems where the backend isn't available.
+-if :NVPTX in LLVM.backends()
++# CoreX (ivcore11) migration: on the CoreX driver (reports CUDA 10.2, below CUDA.jl 6.x's
++# CUDA-12 floor) the JLL machinery provisions no `ptxas` (cuda="none"), so `ptxas_compat()`
++# below throws `UndefVarError: ptxas not defined in CUDA_Compiler_jll` and precompilation
++# crashes before CUDA.jl can even load. Guard the workload with a ptxas-availability probe so
++# the package still precompiles/loads (letting __init__ report the real driver wall) when no
++# usable ptxas is present. (repo-local workaround; /usr/local/corex untouched.)
++_corex_ptxas_available() = try
++    CUDA_Compiler.ptxas(); true
++catch
++    false
++end
++if :NVPTX in LLVM.backends() && _corex_ptxas_available()
+     @compile_workload begin
+         # compile a dummy kernel to precompile the GPUCompiler pipeline.
+         # this uses the compiler toolchain, but doesn't need a GPU.
+diff --git a/LocalPreferences.toml b/LocalPreferences.toml
+index 2bcc848..a179deb 100644
+--- a/LocalPreferences.toml
++++ b/LocalPreferences.toml
+@@ -1,7 +1,15 @@
+ [CUDA_Runtime_jll]
+ # which CUDA runtime to use. in normal cases, this will be auto-detected, but you need to
+ # set this preference if you want to precompile CUDA.jl in an envirnonment without CUDA
+-#version = "12.9"
++# CoreX (ivcore11) migration: the CoreX driver reports CUDA 10.2, below CUDA.jl 6.x's
++# CUDA-12 floor, so JLL auto-detection provisions no `ptxas` (cuda="none") and even
++# precompilation crashes with `UndefVarError: ptxas not defined in CUDA_Compiler_jll`.
++# Pinning a v12 toolkit (e.g. version = "12.6") is the documented fix, but the matching
++# CUDA_Runtime v0.23.0 cuda+12.x artifact is not reachable in this environment (Julia PkgServer
++# mirror returns HTTP 404 for it and the GitHub release fallback is throttled to <1 B/s), so the
++# pin cannot be satisfied here. Left unset; instead precompile.jl is made resilient to the missing
++# `ptxas` so CUDA.jl still loads and the driver/PTX walls can be reproduced through the library.
++#version = "12.6"
+ 
+ # whether to use a local CUDA installation.
+ #local = "false"

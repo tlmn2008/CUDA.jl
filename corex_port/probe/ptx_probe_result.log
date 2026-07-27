@@ -1,0 +1,11 @@
+cuInit                   rc=0 name=IX_SUCCESS msg=no error
+cuDriverGetVersion       rc=0 name=IX_SUCCESS msg=no error
+driver_version_int=10020 (i.e. CUDA 10.2)
+cuDeviceGetCount         rc=0 name=IX_SUCCESS msg=no error
+device_count=2
+cuDeviceGet              rc=0 name=IX_SUCCESS msg=no error
+device0_name=Iluvatar BI-V150
+cuCtxCreate              rc=0 name=IX_SUCCESS msg=no error
+cuModuleLoadData(PTX)    rc=200 name=IX_ERROR_INVALID_IMAGE msg=device kernel image is invalid
+RESULT: PTX JIT REJECTED (rc=200) — driver does not consume NV PTX text.
+cuModuleLoadDataEx(PTX)  rc=200 name=IX_ERROR_INVALID_IMAGE msg=device kernel image is invalid

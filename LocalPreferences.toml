@@ -1,7 +1,15 @@
 [CUDA_Runtime_jll]
 # which CUDA runtime to use. in normal cases, this will be auto-detected, but you need to
 # set this preference if you want to precompile CUDA.jl in an envirnonment without CUDA
-#version = "12.9"
+# CoreX (ivcore11) migration: the CoreX driver reports CUDA 10.2, below CUDA.jl 6.x's
+# CUDA-12 floor, so JLL auto-detection provisions no `ptxas` (cuda="none") and even
+# precompilation crashes with `UndefVarError: ptxas not defined in CUDA_Compiler_jll`.
+# Pinning a v12 toolkit (e.g. version = "12.6") is the documented fix, but the matching
+# CUDA_Runtime v0.23.0 cuda+12.x artifact is not reachable in this environment (Julia PkgServer
+# mirror returns HTTP 404 for it and the GitHub release fallback is throttled to <1 B/s), so the
+# pin cannot be satisfied here. Left unset; instead precompile.jl is made resilient to the missing
+# `ptxas` so CUDA.jl still loads and the driver/PTX walls can be reproduced through the library.
+#version = "12.6"
 
 # whether to use a local CUDA installation.
 #local = "false"

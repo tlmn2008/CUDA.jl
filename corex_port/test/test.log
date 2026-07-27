@@ -1,0 +1,17 @@
+┌ Error: This version of CUDA.jl requires an NVIDIA driver for CUDA 12.x or higher (yours only supports up to CUDA 10.2.0)
+└ @ CUDACore /home/repos/CUDA.jl/CUDACore/src/initialization.jl:93
+ERROR: LoadError: NVIDIA driver too old
+Stacktrace:
+ [1] error(s::String)
+   @ Base ./error.jl:35
+ [2] functional(show_reason::Bool)
+   @ CUDACore /home/repos/CUDA.jl/CUDACore/src/initialization.jl:47
+ [3] top-level scope
+   @ /home/repos/CUDA.jl/test/setup.jl:14
+ [4] include(fname::String)
+   @ Main ./sysimg.jl:38
+ [5] top-level scope
+   @ /home/repos/CUDA.jl/test/runtests.jl:15
+in expression starting at /home/repos/CUDA.jl/test/setup.jl:14
+in expression starting at /home/repos/CUDA.jl/test/runtests.jl:15
+runtests exit=1 (124=timeout)

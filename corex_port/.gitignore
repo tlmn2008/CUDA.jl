@@ -1,0 +1,9 @@
+# 大编译日志留本地, 不进 git
+build/*.log
+env/*.log
+!env/ixsmi.log
+!env/clang_version.txt
+# 探针编译产物(二进制)不提交, 保留源码与结果日志
+probe/ptx_probe
+probe/native_kernel
+# 注意: corex_port/test/test.log 必须提交, 不在忽略之列

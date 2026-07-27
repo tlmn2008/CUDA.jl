@@ -1,0 +1,48 @@
+{
+  "repo_name": "CUDA.jl",
+  "repo_url": "https://github.com/JuliaGPU/CUDA.jl",
+  "source_commit": "13d5f6be30a07ea63828680839c73125eca0ad6f",
+  "source_commit_date": "2026-07-24T18:44:35+02:00",
+  "source_branch": "main",
+  "migration_started_at": "2026-07-27T17:55:00+08:00",
+  "migration_finished_at": "2026-07-27T18:55:00+08:00",
+  "sdk_version": "/usr/local/corex (IX-ML 4.4.0, Driver 4.5.0, CUDA compat 10.2)",
+  "skill_version": "corex-CUDA-compatible-migration@1.0",
+
+  "compile_status": "success",
+  "test_status": "not_attempted",
+  "overall_status": "blocked",
+  "tests_run": 0,
+  "tests_passed": 0,
+  "tests_failed": 0,
+  "tests_skipped": 0,
+
+  "summary": "CUDA.jl 是 Julia 的 CUDA 编程接口: 它把 Julia 代码经 LLVM NVPTX 后端 JIT 成 NVIDIA PTX 文本, 再通过驱动 API cuModuleLoadData 加载执行。裸驱动探针实证: 在 ivcore11(Iluvatar BI-V150) 上 cuInit/建上下文/取设备均成功, 但 cuModuleLoadData/cuModuleLoadDataEx 对合法 NV PTX 返回 CUDA_ERROR_INVALID_IMAGE(200); 对照用 CoreX clang++ -x cuda(--cuda-gpu-arch=ivcore11) 编译的等价 kernel 运行结果正确, 证明 GPU 与工具链正常, 壁垒专属于 NV PTX 文本 ingestion——这正是 CUDA.jl 的必经路径, 且 CUDA.jl 无 ivcore11 device 后端。此外 CUDA.jl 6.x 硬性要求驱动支持 CUDA>=12, 而 CoreX 报告 10.2, 初始化直接 functional()=false。用 Julia 1.11.5 实跑: 修复一个 repo-local 预编译崩溃(ptxas 缺失守卫)后包可加载, 但完整测试套件在 test/setup.jl:14 `@assert CUDA.functional(true)` 处立即崩溃(NVIDIA driver too old), 0 个运行时用例执行。综合判定为 blocked(存在未解决的 terminal blocker)。",
+  "key_adaptations": [
+    "裸 C 探针 corex_port/probe/ptx_probe.c 实证 cuModuleLoadData(NV PTX)=200 IX_ERROR_INVALID_IMAGE, 复现 CUDA.jl 核心 JIT 路径的 terminal 壁垒",
+    "对照探针 corex_port/probe/native_kernel.cu 用 CoreX clang++ -x cuda(ivcore11) 编译+运行, 结果正确, 隔离出壁垒仅在 NV PTX 文本而非 GPU/工具链",
+    "CUDACore/src/precompile.jl: 为 @compile_workload 加 ptxas 可用性守卫, 绕过 CoreX 驱动下 `UndefVarError: ptxas not defined in CUDA_Compiler_jll` 的预编译崩溃, 使包能加载(workaround-able 已解决)",
+    "通过库复现驱动版本壁垒: using CUDA -> functional()=false, functional(true) 抛 NVIDIA driver too old, devices() 抛 CUDA_ERROR_NOT_INITIALIZED"
+  ],
+  "terminal_blockers": [
+    "ivcore11 驱动拒绝 NVIDIA PTX 文本: cuModuleLoadData/cuModuleLoadDataEx 返回 CUDA_ERROR_INVALID_IMAGE(200); CUDA.jl 的 Julia->NVPTX->PTX->cuModuleLoadData 路径无法在此驱动上加载 kernel, 且无 ivcore11 后端可切换",
+    "CUDA.jl 6.x 要求驱动 CUDA>=12, CoreX 驱动报告 10.2, initialization.jl 判 functional()=false; 驱动版本由 /usr/local/corex 决定(不可改), 绕过后仍撞上述 PTX 壁垒"
+  ],
+  "workaround_blockers": [
+    "预编译崩溃 `UndefVarError: ptxas not defined in CUDA_Compiler_jll`(CoreX 驱动下 JLL cuda 标签为 none 无 ptxas): 已在 precompile.jl 加 ptxas 守卫绕过, 预编译成功。注: 官方修复(pin CUDA_Runtime_jll version=12.6)因该 cuda+12.x 制品在本环境不可达(镜像 404 + GitHub 限速)而无法采用"
+  ],
+
+  "github": {
+    "fork_url": "https://github.com/tlmn2008/CUDA.jl",
+    "branch": "corex-port",
+    "default_branch": "corex-port",
+    "default_branch_status": "not_attempted",
+    "compare_url": "https://github.com/tlmn2008/CUDA.jl/compare/main...corex-port",
+    "push_status": "pending"
+  },
+
+  "local_logs": {
+    "compile_log": "/home/repos/CUDA.jl/corex_port/build/precompile_resilient.log",
+    "test_log": "/home/repos/CUDA.jl/corex_port/test/test.log"
+  }
+}

@@ -1,0 +1,1 @@
+sync=no error h[0]=1.0 h[255]=256.0 (expect 1.0 / 256.0)

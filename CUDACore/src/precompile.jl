@@ -1,7 +1,18 @@
 # `llvm_compat()` requires being able to initialize the NVPTX backend, so we run the
 # precompile workload only when that's supported, to be able to load this package also on
 # systems where the backend isn't available.
-if :NVPTX in LLVM.backends()
+# CoreX (ivcore11) migration: on the CoreX driver (reports CUDA 10.2, below CUDA.jl 6.x's
+# CUDA-12 floor) the JLL machinery provisions no `ptxas` (cuda="none"), so `ptxas_compat()`
+# below throws `UndefVarError: ptxas not defined in CUDA_Compiler_jll` and precompilation
+# crashes before CUDA.jl can even load. Guard the workload with a ptxas-availability probe so
+# the package still precompiles/loads (letting __init__ report the real driver wall) when no
+# usable ptxas is present. (repo-local workaround; /usr/local/corex untouched.)
+_corex_ptxas_available() = try
+    CUDA_Compiler.ptxas(); true
+catch
+    false
+end
+if :NVPTX in LLVM.backends() && _corex_ptxas_available()
     @compile_workload begin
         # compile a dummy kernel to precompile the GPUCompiler pipeline.
         # this uses the compiler toolchain, but doesn't need a GPU.

@@ -1,0 +1,22 @@
+{
+  "compat_cases": [
+    {
+      "case": "cuModuleLoad(NV PTX) 拒绝",
+      "source": "iluvatar-cuda-base / references/sdk-api-diffs.md",
+      "symptom": "cuModuleLoadData 返回 CUDA_ERROR_INVALID_IMAGE(200), ivcore11 后端不消费 NV PTX 文本; runtime <<<>>> 不受影响",
+      "how_used": "指导 blocker#1 的诊断与探针设计; 实测 ptx_probe 得到 rc=200, native <<<>>> 正常, 与该 case 完全吻合"
+    },
+    {
+      "case": "corex nvcc 是 script stub",
+      "source": "iluvatar-cuda-base / scripts/nvcc-shell-stub-detect",
+      "symptom": "which nvcc 指向 /usr/local/corex/bin/nvcc, 实为脚本, 假成功无产物",
+      "how_used": "确认禁止 nvcc, 用 clang++ -x cuda(ivcore11) 做对照 native 编译; `file $(which nvcc)` 实测为 Bourne-Again shell script"
+    },
+    {
+      "case": "clang++ -x cuda 需替换为 -x ivcore",
+      "source": "iluvatar-cuda-base / references/python-integration.md (PyTorch ext -x ivcore warning)",
+      "symptom": "为 ivcore 编译 .cu 时 '-x cuda' 触发 warning, 应改 '-x ivcore'",
+      "how_used": "native_kernel.cu 编译时出现该 warning(仍成功产物); 记录以说明 CoreX 原生路径的正确 flag"
+    }
+  ]
+}
