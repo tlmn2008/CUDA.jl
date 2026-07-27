@@ -36,9 +36,11 @@
     "fork_url": "https://github.com/tlmn2008/CUDA.jl",
     "branch": "corex-port",
     "default_branch": "corex-port",
-    "default_branch_status": "not_attempted",
+    "default_branch_status": "success",
     "compare_url": "https://github.com/tlmn2008/CUDA.jl/compare/main...corex-port",
-    "push_status": "pending"
+    "push_commit": "76822261e750dfb84603a65af0969d636a3fedd9",
+    "push_status": "success",
+    "pushed_at": "2026-07-27T18:56:00+08:00"
   },
 
   "local_logs": {
