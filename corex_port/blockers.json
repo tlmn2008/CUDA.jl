@@ -1,44 +1,67 @@
 {
+  "schema_version": "1.0",
+  "repo": "CUDA.jl",
   "blockers": [
     {
-      "id": 1,
-      "category": "terminal",
+      "id": "1",
       "symptom": "ivcore11 驱动拒绝 NVIDIA PTX 文本: cuModuleLoadData / cuModuleLoadDataEx 返回 CUDA_ERROR_INVALID_IMAGE(200)。这正是 CUDA.jl 的核心代码路径——它把 Julia 代码经 LLVM NVPTX 后端编译成 NV PTX 文本, 再用 cuLinkAddData(JIT_INPUT_PTX)/cuModuleLoadData 交给驱动 JIT。",
+      "classification": "terminal",
+      "resolved": false,
       "file": "corex_port/probe/ptx_probe.c ; CUDACore/lib/cudadrv/module/linker.jl:69-118 ; CUDACore/src/compiler/compilation.jl:140-225",
+      "final_verdict": "terminal: ivcore11 驱动不消费 NVIDIA PTX/cubin 文本, 而 CUDA.jl 的 JIT 只能产出 NV PTX; 二者不可调和, 且不允许修改 /usr/local/corex。与 ILGPU / TornadoVM 此前观察一致。",
       "error_snippet": "cuModuleLoadData(PTX)    rc=200 name=IX_ERROR_INVALID_IMAGE msg=device kernel image is invalid",
       "attempts": [
-        {"action": "裸驱动探针: cuInit/cuDeviceGet/cuCtxCreate 全部成功, 仅 cuModuleLoadData(合法最小 NV PTX) 返回 200; cuModuleLoadDataEx 同样 200", "result": "确认驱动层拒绝 NV PTX 文本"},
-        {"action": "对照探针: 用 CoreX clang++ -x cuda --cuda-gpu-arch=ivcore11 编译等价 kernel 并 <<<>>> 运行, 结果正确(h[0]=1.0, h[255]=256.0)", "result": "证明 GPU 与 CoreX 工具链本身正常, 壁垒专属于 NV PTX 文本的 ingestion"},
-        {"action": "查探替代后端: CUDA.jl 无 ivcore11 device backend, 其 codegen 硬绑定 LLVM NVPTX target + ptxas, 无 OpenCL/native 兜底路径", "result": "无可用绕过"}
-      ],
-      "final_verdict": "terminal: ivcore11 驱动不消费 NVIDIA PTX/cubin 文本, 而 CUDA.jl 的 JIT 只能产出 NV PTX; 二者不可调和, 且不允许修改 /usr/local/corex。与 ILGPU / TornadoVM 此前观察一致。",
-      "resolved": false
+        {
+          "action": "裸驱动探针: cuInit/cuDeviceGet/cuCtxCreate 全部成功, 仅 cuModuleLoadData(合法最小 NV PTX) 返回 200; cuModuleLoadDataEx 同样 200",
+          "result": "确认驱动层拒绝 NV PTX 文本"
+        },
+        {
+          "action": "对照探针: 用 CoreX clang++ -x cuda --cuda-gpu-arch=ivcore11 编译等价 kernel 并 <<<>>> 运行, 结果正确(h[0]=1.0, h[255]=256.0)",
+          "result": "证明 GPU 与 CoreX 工具链本身正常, 壁垒专属于 NV PTX 文本的 ingestion"
+        },
+        {
+          "action": "查探替代后端: CUDA.jl 无 ivcore11 device backend, 其 codegen 硬绑定 LLVM NVPTX target + ptxas, 无 OpenCL/native 兜底路径",
+          "result": "无可用绕过"
+        }
+      ]
     },
     {
-      "id": 2,
-      "category": "terminal",
+      "id": "2",
       "symptom": "CUDA.jl 6.x 硬性要求 NVIDIA 驱动支持 CUDA 12.x 或更高; CoreX 驱动 cuDriverGetVersion 报告 CUDA 10.2, initialization.jl 直接判 functional()=false 并拒绝初始化。测试套件在 test/setup.jl:14 `@assert CUDA.functional(true)` 处即崩溃, 一个运行时用例都无法执行。",
+      "classification": "terminal",
+      "resolved": false,
       "file": "CUDACore/src/initialization.jl:92-96 ; test/setup.jl:14 ; test/runtests.jl:15",
+      "final_verdict": "terminal: 驱动上报的 CUDA 版本由 /usr/local/corex 决定(不可改), 无法提升到 12; 且绕过后必然落到 blocker#1。测试套件因此 0 用例执行。",
       "error_snippet": "Error: This version of CUDA.jl requires an NVIDIA driver for CUDA 12.x or higher (yours only supports up to CUDA 10.2.0)  ->  ERROR: LoadError: NVIDIA driver too old",
       "attempts": [
-        {"action": "通过库复现: using CUDA; CUDA.functional() = false; functional(true) 抛 \"NVIDIA driver too old\"; CUDA.devices() 抛 CUDA_ERROR_NOT_INITIALIZED(3)", "result": "复现驱动版本壁垒"},
-        {"action": "评估绕过: 即使 repo-local 改掉 initialization.jl 的 driver<12 门禁, 后续仍需 ptxas 产出 PTX/cubin 且最终仍撞 blocker#1 的 cuModuleLoadData 200", "result": "绕过无意义, 下游即 terminal"}
-      ],
-      "final_verdict": "terminal: 驱动上报的 CUDA 版本由 /usr/local/corex 决定(不可改), 无法提升到 12; 且绕过后必然落到 blocker#1。测试套件因此 0 用例执行。",
-      "resolved": false
+        {
+          "action": "通过库复现: using CUDA; CUDA.functional() = false; functional(true) 抛 \"NVIDIA driver too old\"; CUDA.devices() 抛 CUDA_ERROR_NOT_INITIALIZED(3)",
+          "result": "复现驱动版本壁垒"
+        },
+        {
+          "action": "评估绕过: 即使 repo-local 改掉 initialization.jl 的 driver<12 门禁, 后续仍需 ptxas 产出 PTX/cubin 且最终仍撞 blocker#1 的 cuModuleLoadData 200",
+          "result": "绕过无意义, 下游即 terminal"
+        }
+      ]
     },
     {
-      "id": 3,
-      "category": "workaround-able",
+      "id": "3",
       "symptom": "预编译崩溃: CUDACore 的 @compile_workload 调用 ptxas_compat() -> compiler_version() -> CUDA_Compiler.ptxas(), 但在 CoreX 驱动(10.2)下 JLL 平台标签为 cuda=\"none\", CUDA_Compiler_jll 未提供 ptxas 函数。",
+      "classification": "workaround-able",
+      "resolved": true,
       "file": "CUDACore/src/precompile.jl:16 ; CUDACore/lib/cudadrv/version.jl:145 ; CUDACore/src/compatibility.jl:340",
+      "final_verdict": "已用 repo-local 守卫绕过, 预编译通过; 使包能加载以暴露 blocker#1/#2。",
       "error_snippet": "ERROR: LoadError: UndefVarError: `ptxas` not defined in `CUDA_Compiler_jll`",
       "attempts": [
-        {"action": "方案A: pin [CUDA_Runtime_jll] version=\"12.6\" 以强制 JLL 提供 cuda+12 的 ptxas 制品", "result": "失败: cuda+12.6 的 CUDA_Runtime v0.23.0 制品在本环境不可达(NJU 镜像 404, GitHub release 回退被限速 <1 B/s, resolve 报错)"},
-        {"action": "方案B: 在 precompile.jl 为 @compile_workload 加 ptxas 可用性守卫 _corex_ptxas_available(), 无 ptxas 时跳过该 workload", "result": "resolved: 预编译成功(precompile_resilient.log exit=0), 包可正常加载"}
-      ],
-      "final_verdict": "已用 repo-local 守卫绕过, 预编译通过; 使包能加载以暴露 blocker#1/#2。",
-      "resolved": true
+        {
+          "action": "方案A: pin [CUDA_Runtime_jll] version=\"12.6\" 以强制 JLL 提供 cuda+12 的 ptxas 制品",
+          "result": "失败: cuda+12.6 的 CUDA_Runtime v0.23.0 制品在本环境不可达(NJU 镜像 404, GitHub release 回退被限速 <1 B/s, resolve 报错)"
+        },
+        {
+          "action": "方案B: 在 precompile.jl 为 @compile_workload 加 ptxas 可用性守卫 _corex_ptxas_available(), 无 ptxas 时跳过该 workload",
+          "result": "resolved: 预编译成功(precompile_resilient.log exit=0), 包可正常加载"
+        }
+      ]
     }
   ]
 }
