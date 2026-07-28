@@ -30,9 +30,8 @@
     "预编译崩溃 `UndefVarError: ptxas not defined in CUDA_Compiler_jll`(CoreX 驱动下 JLL cuda 标签为 none 无 ptxas): 已在 precompile.jl 加 ptxas 守卫绕过, 预编译成功。注: 官方修复(pin CUDA_Runtime_jll version=12.6)因该 cuda+12.x 制品在本环境不可达(镜像 404 + GitHub 限速)而无法采用"
   ],
   "upstream_assessment": {
-    "upstreamable": "no",
-    "nvidia_compatible": "preserved",
-    "notes": "仅 CUDACore/src/precompile.jl 增加 _corex_ptxas_available() 探针使无 ptxas 时跳过 @compile_workload、LocalPreferences.toml 配置，属附加式绕过(对有 ptxas 的 NVIDIA 无影响)。ivcore11 驱动拒绝 NV PTX 文本 + 驱动报 CUDA10.2<12(terminal)，CUDA.jl 只产 NV PTX 且无 ivcore11 后端，当前形态无独立回上游价值。CLA 需签。"
+    "upstream_status": "blocked",
+    "notes": "仅 CUDACore/src/precompile.jl 增加 _corex_ptxas_available() 探针与 LocalPreferences.toml 配置,属附加式绕过,对有 ptxas 的 NVIDIA 无影响。但 ivcore11 驱动拒收 NV PTX 文本(cuModuleLoadData 返回 200)且驱动报 CUDA10.2<12,CUDA.jl 的 Julia→NVPTX→PTX 路径无 ivcore11 后端可切换(terminal),CoreX 适配产不出可用后端,无可上游的 CoreX 支持。CLA 需签。"
   },
   "bugfixes": [],
   "github": {
