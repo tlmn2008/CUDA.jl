@@ -22,13 +22,6 @@
     "CUDACore/src/precompile.jl: 为 @compile_workload 加 ptxas 可用性守卫, 绕过 CoreX 驱动下 `UndefVarError: ptxas not defined in CUDA_Compiler_jll` 的预编译崩溃, 使包能加载(workaround-able 已解决)",
     "通过库复现驱动版本壁垒: using CUDA -> functional()=false, functional(true) 抛 NVIDIA driver too old, devices() 抛 CUDA_ERROR_NOT_INITIALIZED"
   ],
-  "terminal_blockers": [
-    "ivcore11 驱动拒绝 NVIDIA PTX 文本: cuModuleLoadData/cuModuleLoadDataEx 返回 CUDA_ERROR_INVALID_IMAGE(200); CUDA.jl 的 Julia->NVPTX->PTX->cuModuleLoadData 路径无法在此驱动上加载 kernel, 且无 ivcore11 后端可切换",
-    "CUDA.jl 6.x 要求驱动 CUDA>=12, CoreX 驱动报告 10.2, initialization.jl 判 functional()=false; 驱动版本由 /usr/local/corex 决定(不可改), 绕过后仍撞上述 PTX 壁垒"
-  ],
-  "workaround_blockers": [
-    "预编译崩溃 `UndefVarError: ptxas not defined in CUDA_Compiler_jll`(CoreX 驱动下 JLL cuda 标签为 none 无 ptxas): 已在 precompile.jl 加 ptxas 守卫绕过, 预编译成功。注: 官方修复(pin CUDA_Runtime_jll version=12.6)因该 cuda+12.x 制品在本环境不可达(镜像 404 + GitHub 限速)而无法采用"
-  ],
   "upstream_assessment": {
     "upstream_status": "blocked",
     "notes": "仅 CUDACore/src/precompile.jl 增加 _corex_ptxas_available() 探针与 LocalPreferences.toml 配置,属附加式绕过,对有 ptxas 的 NVIDIA 无影响。但 ivcore11 驱动拒收 NV PTX 文本(cuModuleLoadData 返回 200)且驱动报 CUDA10.2<12,CUDA.jl 的 Julia→NVPTX→PTX 路径无 ivcore11 后端可切换(terminal),CoreX 适配产不出可用后端,无可上游的 CoreX 支持。CLA 需签。"
